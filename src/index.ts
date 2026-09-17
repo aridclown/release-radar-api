@@ -2,6 +2,7 @@ export const VERSION = "0.1.0";
 
 export interface Env {
   COMMIT?: string;
+  SLUG?: string;
 }
 
 type Release = {
@@ -59,12 +60,12 @@ async function github(url: string, fetcher: typeof fetch): Promise<Response> {
   return fetcher(url, { headers: { accept: "application/vnd.github+json", "user-agent": "release-radar-api" } });
 }
 
-export async function handle(request: Request, fetcher: typeof fetch = fetch, commit = "UNDEPLOYED"): Promise<Response> {
+export async function handle(request: Request, fetcher: typeof fetch = fetch, commit = "UNDEPLOYED", slug = "release-radar"): Promise<Response> {
   const url = new URL(request.url);
   if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405, { allow: "GET" });
   if (url.pathname === "/health") return json({ status: "ok", version: VERSION, commit });
   if (url.pathname === "/.well-known/xagent-verification.json") {
-    return json({ schemaVersion: 1, slug: "release-radar", commit });
+    return json({ schemaVersion: 1, slug, commit });
   }
   if (url.pathname === "/") {
     return json({
@@ -87,5 +88,5 @@ export async function handle(request: Request, fetcher: typeof fetch = fetch, co
 }
 
 export default {
-  fetch: (request: Request, env: Env) => handle(request, fetch, env.COMMIT),
+  fetch: (request: Request, env: Env) => handle(request, fetch, env.COMMIT, env.SLUG),
 } satisfies ExportedHandler<Env>;
