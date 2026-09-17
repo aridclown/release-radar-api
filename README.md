@@ -26,8 +26,8 @@ npm run dev
 
 ## Deployment
 
-Set `COMMIT` in `src/index.ts` to the reviewed 40-character Git commit immediately before deploy. The health and X-Agent verification endpoints report that same value.
+Pass the reviewed 40-character Git commit at deployment time. The health and X-Agent verification endpoints report that same value.
 
 ```sh
-npm run deploy
+npx wrangler deploy --var COMMIT:<40-character-git-commit>
 ```

@@ -1,5 +1,8 @@
 export const VERSION = "0.1.0";
-export const COMMIT = "UNDEPLOYED";
+
+export interface Env {
+  COMMIT?: string;
+}
 
 type Release = {
   tag_name: string;
@@ -56,12 +59,12 @@ async function github(url: string, fetcher: typeof fetch): Promise<Response> {
   return fetcher(url, { headers: { accept: "application/vnd.github+json", "user-agent": "release-radar-api" } });
 }
 
-export async function handle(request: Request, fetcher: typeof fetch = fetch): Promise<Response> {
+export async function handle(request: Request, fetcher: typeof fetch = fetch, commit = "UNDEPLOYED"): Promise<Response> {
   const url = new URL(request.url);
   if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405, { allow: "GET" });
-  if (url.pathname === "/health") return json({ status: "ok", version: VERSION, commit: COMMIT });
+  if (url.pathname === "/health") return json({ status: "ok", version: VERSION, commit });
   if (url.pathname === "/.well-known/xagent-verification.json") {
-    return json({ schemaVersion: 1, slug: "release-radar", commit: COMMIT });
+    return json({ schemaVersion: 1, slug: "release-radar", commit });
   }
   if (url.pathname === "/") {
     return json({
@@ -83,4 +86,6 @@ export async function handle(request: Request, fetcher: typeof fetch = fetch): P
   return json({ repo, count: releases.length, releases: releases.filter((r) => !r.draft).map(summarizeRelease) });
 }
 
-export default { fetch: (request: Request) => handle(request) } satisfies ExportedHandler;
+export default {
+  fetch: (request: Request, env: Env) => handle(request, fetch, env.COMMIT),
+} satisfies ExportedHandler<Env>;
